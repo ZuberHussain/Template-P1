@@ -1,0 +1,15 @@
+<button
+  [type]="type()"
+  [disabled]="disabled() || loading()"
+  [class]="'btn btn-' + variant() + ' btn-' + size()"
+  [class.btn-full]="fullWidth()"
+  [class.btn-loading]="loading()"
+  (click)="handleClick($event)"
+>
+  @if (loading()) {
+    <app-loading-spinner [size]="size() === 'lg' ? 'md' : 'sm'" />
+    <span class="btn-text-loading">Processing...</span>
+  } @else {
+    <ng-content></ng-content>
+  }
+</button>

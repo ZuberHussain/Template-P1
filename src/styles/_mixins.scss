@@ -1,0 +1,54 @@
+// Enterprise SCSS Mixins & Helpers
+
+// Responsive Breakpoints
+$screen-sm: 640px;
+$screen-md: 768px;
+$screen-lg: 1024px;
+$screen-xl: 1280px;
+
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == 'sm' {
+    @media (min-width: $screen-sm) { @content; }
+  } @else if $breakpoint == 'md' {
+    @media (min-width: $screen-md) { @content; }
+  } @else if $breakpoint == 'lg' {
+    @media (min-width: $screen-lg) { @content; }
+  } @else if $breakpoint == 'xl' {
+    @media (min-width: $screen-xl) { @content; }
+  }
+}
+
+// Flex Center
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Flex Between
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Truncate Text with ellipsis
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Focus Ring for Accessibility
+@mixin focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-focus);
+  border-color: var(--color-primary);
+}
+
+// Glassmorphism effect
+@mixin glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}

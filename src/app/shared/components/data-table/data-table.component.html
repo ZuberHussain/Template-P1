@@ -1,0 +1,190 @@
+<div class="data-table-container">
+  <!-- Top Search & Summary Bar -->
+  <div class="table-toolbar">
+    @if (searchable()) {
+      <div class="search-box">
+        <span class="search-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input
+          type="text"
+          [placeholder]="searchPlaceholder()"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchChange($event)"
+          class="search-input"
+        />
+        @if (searchTerm()) {
+          <button type="button" class="clear-search-btn" (click)="clearSearch()" title="Clear search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Records Count Badge -->
+    <div class="results-meta">
+      <span class="meta-badge">
+        Showing <strong>{{ paginatedRows().length }}</strong> of <strong>{{ filteredData().length }}</strong> filtered (Total: {{ data().length }})
+      </span>
+    </div>
+  </div>
+
+  <!-- Table Body Wrapper -->
+  <div class="table-responsive">
+    <table class="enterprise-table">
+      <thead>
+        <tr>
+          @for (col of columns(); track col.key) {
+            <th
+              [style.width]="col.width"
+              [class.sortable]="col.sortable"
+              [class.text-center]="col.align === 'center'"
+              [class.text-end]="col.align === 'end'"
+              (click)="handleSort(col.key, col.sortable)"
+            >
+              <div class="th-content">
+                <span>{{ col.header }}</span>
+                @if (col.sortable) {
+                  <span class="sort-indicator">
+                    @if (sortColumn() === col.key) {
+                      @if (sortDirection() === 'asc') {
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                      } @else {
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      }
+                    } @else {
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="sort-neutral">
+                        <polyline points="7 10 12 5 17 10"></polyline>
+                        <polyline points="7 14 12 19 17 14"></polyline>
+                      </svg>
+                    }
+                  </span>
+                }
+              </div>
+            </th>
+          }
+
+          <!-- Last Column: Actions -->
+          @if (actions().length > 0) {
+            <th class="actions-header text-center">
+              {{ actionsHeader() }}
+            </th>
+          }
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (row of paginatedRows(); track row[rowIdKey()] || $index) {
+          <tr class="table-row">
+            @for (col of columns(); track col.key) {
+              <td
+                [class.text-center]="col.align === 'center'"
+                [class.text-end]="col.align === 'end'"
+              >
+                @if (col.cellType === 'badge') {
+                  <span [class]="col.badgeClass ? col.badgeClass(row) : 'status-badge'">
+                    {{ getCellValue(row, col) }}
+                  </span>
+                } @else {
+                  <span class="cell-text">{{ getCellValue(row, col) }}</span>
+                }
+              </td>
+            }
+
+            <!-- Last Column: Actions Dropdown (Permission-Based) -->
+            @if (actions().length > 0) {
+              <td class="actions-cell text-center">
+                @if (hasAnyAction(row)) {
+                  <div class="dropdown-wrapper" (appClickOutside)="closeDropdown()">
+                    <button
+                      type="button"
+                      class="dropdown-toggle-btn"
+                      (click)="toggleDropdown(row, $event)"
+                      [attr.aria-expanded]="activeDropdownRowId() === (row[rowIdKey()] || row)"
+                      title="Actions"
+                    >
+                      <span class="btn-text">Options</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    @if (activeDropdownRowId() === (row[rowIdKey()] || row)) {
+                      <div class="dropdown-menu animate-fade-in" role="menu">
+                        <div class="dropdown-header">Change Status / Actions</div>
+                        @for (action of getPermittedActions(row); track action.id) {
+                          <button
+                            type="button"
+                            class="dropdown-item"
+                            [class.item-danger]="action.danger"
+                            [disabled]="action.disabled && action.disabled(row)"
+                            (click)="executeAction(action, row, $event)"
+                            role="menuitem"
+                          >
+                            @if (action.icon) {
+                              <span class="action-icon" [innerHTML]="action.icon"></span>
+                            }
+                            <span class="action-label">{{ action.label }}</span>
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <!-- Restricted badge when user lacks permission -->
+                  <span class="no-permissions-badge" title="You do not have permission to modify this record">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Restricted</span>
+                  </span>
+                }
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="columns().length + (actions().length > 0 ? 1 : 0)" class="empty-state-cell">
+              <div class="empty-state">
+                <div class="empty-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                  </svg>
+                </div>
+                <h4 class="empty-title">{{ emptyMessage() }}</h4>
+                <p class="empty-hint">Try entering different search terms or clear the filter to display all records.</p>
+                @if (searchTerm()) {
+                  <button type="button" class="btn-reset-search" (click)="clearSearch()">
+                    Reset Search
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Reusable Global Pagination Footer (inside Data Table) -->
+  @if (paginated() && filteredData().length > 0) {
+    <app-pagination
+      [totalItems]="filteredData().length"
+      [pageSize]="currentPageSize()"
+      [currentPage]="currentPage()"
+      [pageSizeOptions]="pageSizeOptions()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></app-pagination>
+  }
+</div>

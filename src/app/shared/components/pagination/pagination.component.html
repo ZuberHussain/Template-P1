@@ -1,0 +1,118 @@
+<div class="pagination-container" aria-label="Pagination Navigation">
+  <!-- Total Summary Info -->
+  @if (showTotalInfo()) {
+    <div class="pagination-info">
+      @if (totalItems() > 0) {
+        <span>
+          Showing <strong>{{ startItem() }}</strong> to <strong>{{ endItem() }}</strong> of <strong>{{ totalItems() }}</strong> entries
+        </span>
+      } @else {
+        <span>No entries available</span>
+      }
+    </div>
+  }
+
+  <!-- Controls Group -->
+  <div class="pagination-controls-group">
+    <!-- Page Size Selector -->
+    @if (showPageSizeSelector()) {
+      <div class="page-size-picker">
+        <label for="pageSizeSelect" class="page-size-label">Rows per page:</label>
+        <select
+          id="pageSizeSelect"
+          [value]="pageSize()"
+          (change)="onPageSizeSelect($event)"
+          class="page-size-select"
+        >
+          @for (option of pageSizeOptions(); track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <!-- Page Buttons Navigator (RTL Native) -->
+    <nav class="pagination-nav">
+      <!-- First Page Button -->
+      <button
+        type="button"
+        class="nav-btn"
+        [disabled]="currentPage() <= 1"
+        (click)="goToPage(1)"
+        title="First Page"
+        aria-label="Go to first page"
+      >
+        <!-- In RTL: double chevron pointing right for start -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="13 17 18 12 13 7"></polyline>
+          <polyline points="6 17 11 12 6 7"></polyline>
+        </svg>
+      </button>
+
+      <!-- Previous Page Button -->
+      <button
+        type="button"
+        class="nav-btn"
+        [disabled]="currentPage() <= 1"
+        (click)="goToPage(currentPage() - 1)"
+        title="Previous Page"
+        aria-label="Go to previous page"
+      >
+        <!-- In RTL: single chevron pointing right for previous -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+
+      <!-- Numbered Page Pills -->
+      <div class="page-pills">
+        @for (item of pages(); track $index) {
+          @if (item === '...') {
+            <span class="ellipsis-pill" aria-hidden="true">&hellip;</span>
+          } @else {
+            <button
+              type="button"
+              class="page-pill"
+              [class.active]="item === currentPage()"
+              (click)="goToPage(item)"
+              [attr.aria-current]="item === currentPage() ? 'page' : null"
+            >
+              {{ item }}
+            </button>
+          }
+        }
+      </div>
+
+      <!-- Next Page Button -->
+      <button
+        type="button"
+        class="nav-btn"
+        [disabled]="currentPage() >= totalPages()"
+        (click)="goToPage(currentPage() + 1)"
+        title="Next Page"
+        aria-label="Go to next page"
+      >
+        <!-- In RTL: single chevron pointing left for next -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      <!-- Last Page Button -->
+      <button
+        type="button"
+        class="nav-btn"
+        [disabled]="currentPage() >= totalPages()"
+        (click)="goToPage(totalPages())"
+        title="Last Page"
+        aria-label="Go to last page"
+      >
+        <!-- In RTL: double chevron pointing left for end -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="11 17 6 12 11 7"></polyline>
+          <polyline points="18 17 13 12 18 7"></polyline>
+        </svg>
+      </button>
+    </nav>
+  </div>
+</div>

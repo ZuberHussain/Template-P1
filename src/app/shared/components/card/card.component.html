@@ -1,0 +1,27 @@
+<div
+  class="card"
+  [class.card-bordered]="bordered()"
+  [class.card-elevated]="elevated()"
+>
+  @if (title() || subtitle()) {
+    <div class="card-header">
+      <div class="card-title-group">
+        @if (title()) {
+          <h3 class="card-title">{{ title() }}</h3>
+        }
+        @if (subtitle()) {
+          <p class="card-subtitle">{{ subtitle() }}</p>
+        }
+      </div>
+      <ng-content select="[card-actions]"></ng-content>
+    </div>
+  }
+
+  <div class="card-body">
+    <ng-content></ng-content>
+  </div>
+
+  <div class="card-footer">
+    <ng-content select="[card-footer]"></ng-content>
+  </div>
+</div>

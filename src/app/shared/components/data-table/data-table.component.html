@@ -1,4 +1,28 @@
 <div class="data-table-container">
+  <!-- API Error Notification Banner -->
+  @if (errorMessage()) {
+    <div class="table-error-banner animate-fade-in">
+      <div class="error-content">
+        <svg class="error-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <div class="error-text">
+          <strong class="error-title">Data Fetch Error:</strong>
+          <span class="error-message">{{ errorMessage() }}</span>
+        </div>
+      </div>
+      <button type="button" class="btn-retry" (click)="onRetry()" title="Retry loading records">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Retry</span>
+      </button>
+    </div>
+  }
+
   <!-- Top Search & Summary Bar -->
   <div class="table-toolbar">
     @if (searchable()) {
@@ -13,7 +37,7 @@
           type="text"
           [placeholder]="searchPlaceholder()"
           [ngModel]="searchTerm()"
-          (ngModelChange)="onSearchChange($event)"
+          (ngModelChange)="onSearchInput($event)"
           class="search-input"
         />
         @if (searchTerm()) {
@@ -27,16 +51,58 @@
       </div>
     }
 
-    <!-- Records Count Badge -->
-    <div class="results-meta">
-      <span class="meta-badge">
-        Showing <strong>{{ paginatedRows().length }}</strong> of <strong>{{ filteredData().length }}</strong> filtered (Total: {{ data().length }})
-      </span>
+    <!-- Toolbar Right: Refresh & Count Meta -->
+    <div class="toolbar-actions">
+      @if (showRefresh()) {
+        <button
+          type="button"
+          class="btn-refresh"
+          [class.is-loading]="loading()"
+          [disabled]="loading()"
+          (click)="onRefresh()"
+          title="Reload fresh data from server"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            [class.spinning]="loading()"
+          >
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span>Refresh</span>
+        </button>
+      }
+
+      <div class="results-meta">
+        <span class="meta-badge">
+          @if (serverSide()) {
+            Showing <strong>{{ paginatedRows().length }}</strong> of <strong>{{ effectiveTotalCount() }}</strong> server records
+          } @else {
+            Showing <strong>{{ paginatedRows().length }}</strong> of <strong>{{ filteredData().length }}</strong> filtered (Total: {{ data().length }})
+          }
+        </span>
+      </div>
     </div>
   </div>
 
-  <!-- Table Body Wrapper -->
+  <!-- Table Body Wrapper with Loading Overlay -->
   <div class="table-responsive">
+    <!-- Active Async Loading Overlay -->
+    @if (loading() && paginatedRows().length > 0) {
+      <div class="table-loading-overlay animate-fade-in">
+        <div class="loading-box">
+          <app-loading-spinner size="md" color="var(--color-primary)"></app-loading-spinner>
+          <span class="loading-text">{{ loadingMessage() }}</span>
+        </div>
+      </div>
+    }
+
     <table class="enterprise-table">
       <thead>
         <tr>
@@ -153,22 +219,32 @@
         } @empty {
           <tr>
             <td [attr.colspan]="columns().length + (actions().length > 0 ? 1 : 0)" class="empty-state-cell">
-              <div class="empty-state">
-                <div class="empty-icon">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    <line x1="8" y1="11" x2="14" y2="11"></line>
-                  </svg>
+              @if (loading()) {
+                <!-- Initial Loading State -->
+                <div class="empty-state">
+                  <app-loading-spinner size="lg" color="var(--color-primary)"></app-loading-spinner>
+                  <h4 class="empty-title">{{ loadingMessage() }}</h4>
+                  <p class="empty-hint">Connecting to enterprise services and retrieving data...</p>
                 </div>
-                <h4 class="empty-title">{{ emptyMessage() }}</h4>
-                <p class="empty-hint">Try entering different search terms or clear the filter to display all records.</p>
-                @if (searchTerm()) {
-                  <button type="button" class="btn-reset-search" (click)="clearSearch()">
-                    Reset Search
-                  </button>
-                }
-              </div>
+              } @else {
+                <!-- Empty State -->
+                <div class="empty-state">
+                  <div class="empty-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                  </div>
+                  <h4 class="empty-title">{{ emptyMessage() }}</h4>
+                  <p class="empty-hint">Try entering different search terms or clear the filter to display all records.</p>
+                  @if (searchTerm()) {
+                    <button type="button" class="btn-reset-search" (click)="clearSearch()">
+                      Reset Search
+                    </button>
+                  }
+                </div>
+              }
             </td>
           </tr>
         }
@@ -176,10 +252,10 @@
     </table>
   </div>
 
-  <!-- Reusable Global Pagination Footer (inside Data Table) -->
-  @if (paginated() && filteredData().length > 0) {
+  <!-- Reusable Global Pagination Footer -->
+  @if (paginated() && effectiveTotalCount() > 0) {
     <app-pagination
-      [totalItems]="filteredData().length"
+      [totalItems]="effectiveTotalCount()"
       [pageSize]="currentPageSize()"
       [currentPage]="currentPage()"
       [pageSizeOptions]="pageSizeOptions()"

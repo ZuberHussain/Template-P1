@@ -12,5 +12,18 @@ export const API_ENDPOINTS = {
   },
   DASHBOARD: {
     METRICS: '/dashboard/metrics'
+  },
+  /**
+   * 🔌 Trips & Data Table API Endpoints:
+   * Adjust these path definitions to match your backend REST routes.
+   */
+  TRIPS: {
+    BASE: '/trips',
+    GET_ALL: '/trips',
+    GET_BY_ID: (id: string | number) => `/trips/${id}`,
+    CREATE: '/trips',
+    UPDATE: (id: string | number) => `/trips/${id}`,
+    UPDATE_STATUS: (id: string | number) => `/trips/${id}/status`,
+    DELETE: (id: string | number) => `/trips/${id}`
   }
 } as const;

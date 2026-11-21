@@ -1,9 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TripService } from '../../services/trip.service';
-import { Trip, CreateTripDto, TripStatus, TRIP_STATUS_LABELS, TRIP_STATUS_BADGES } from '../../models/trip.model';
+import { TableQueryParams } from '@core/models/api-response.model';
 import { DataTableComponent, TableColumn, TableDropdownAction } from '@shared/components/data-table/data-table.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
+import { TripService } from '../../services/trip.service';
+import { Trip, CreateTripDto, TripStatus, TRIP_STATUS_LABELS, TRIP_STATUS_BADGES } from '../../models/trip.model';
 import { TripFormModalComponent } from '../../components/trip-form-modal/trip-form-modal.component';
 
 @Component({
@@ -16,10 +17,16 @@ import { TripFormModalComponent } from '../../components/trip-form-modal/trip-fo
 export class TripsListComponent {
   private readonly tripService = inject(TripService);
 
+  // Reactive State from Trip API Service
   readonly trips = this.tripService.trips;
+  readonly isLoading = this.tripService.isLoading;
+  readonly error = this.tripService.error;
+  readonly totalCount = this.tripService.totalCount;
+
+  // Add Trip Modal Visibility
   readonly isAddModalOpen = signal<boolean>(false);
 
-  // 1. Table Columns Configuration in English
+  // 1. Table Columns Configuration
   readonly columns: TableColumn<Trip>[] = [
     {
       key: 'name',
@@ -58,10 +65,6 @@ export class TripsListComponent {
   ];
 
   // 2. Table Dropdown Actions (Permission-Based Status Transitions)
-  // draft -> Open Trip
-  // open -> Close Trip
-  // closed -> Re-open Trip
-  // Extensible for future requirements
   readonly tableActions: TableDropdownAction<Trip>[] = [
     // Transition Draft -> Open
     {
@@ -93,7 +96,7 @@ export class TripsListComponent {
       label: 'Delete Trip',
       permission: 'TRIP_DELETE',
       danger: true,
-      action: (trip: Trip) => this.tripService.deleteTrip(trip.id)
+      action: (trip: Trip) => this.handleDeleteTrip(trip.id)
     }
   ];
 
@@ -106,11 +109,26 @@ export class TripsListComponent {
   }
 
   onSaveNewTrip(dto: CreateTripDto): void {
-    this.tripService.addTrip(dto);
-    this.closeAddTripModal();
+    this.tripService.addTrip(dto).subscribe({
+      next: () => {
+        this.closeAddTripModal();
+      }
+    });
+  }
+
+  onRefresh(): void {
+    this.tripService.loadTrips().subscribe();
+  }
+
+  onQueryChange(params: TableQueryParams): void {
+    this.tripService.loadTrips(params).subscribe();
   }
 
   private handleStatusChange(tripId: string, newStatus: TripStatus): void {
-    this.tripService.updateTripStatus(tripId, newStatus);
+    this.tripService.updateTripStatus(tripId, newStatus).subscribe();
+  }
+
+  private handleDeleteTrip(tripId: string): void {
+    this.tripService.deleteTrip(tripId).subscribe();
   }
 }

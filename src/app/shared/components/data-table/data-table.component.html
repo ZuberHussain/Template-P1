@@ -146,7 +146,7 @@
       </thead>
 
       <tbody>
-        @for (row of paginatedRows(); track row[rowIdKey()] || $index) {
+        @for (row of paginatedRows(); track getRowId(row)) {
           <tr class="table-row">
             @for (col of columns(); track col.key) {
               <td
@@ -172,7 +172,7 @@
                       type="button"
                       class="dropdown-toggle-btn"
                       (click)="toggleDropdown(row, $event)"
-                      [attr.aria-expanded]="activeDropdownRowId() === (row[rowIdKey()] || row)"
+                      [attr.aria-expanded]="isDropdownActive(row)"
                       title="Actions"
                     >
                       <span class="btn-text">Options</span>
@@ -182,7 +182,7 @@
                     </button>
 
                     <!-- Dropdown Menu -->
-                    @if (activeDropdownRowId() === (row[rowIdKey()] || row)) {
+                    @if (isDropdownActive(row)) {
                       <div class="dropdown-menu animate-fade-in" role="menu">
                         <div class="dropdown-header">Change Status / Actions</div>
                         @for (action of getPermittedActions(row); track action.id) {

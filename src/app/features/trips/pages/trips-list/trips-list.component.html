@@ -5,35 +5,33 @@
       <div class="badge-tag">FIELD OPERATIONS & LOGISTICS</div>
       <h1 class="page-title">Trips Management Directory</h1>
       <p class="page-subtitle">
-        Manage corporate trip schedules, real-time search, and status lifecycles with role-based access control and API integration.
+        Manage corporate trip schedules, real-time search, and status lifecycles with role-based action permissions.
       </p>
     </div>
 
-    <!-- At Top Left: Add Trip Button (opens form component) -->
-    <div class="header-action-left">
-      <app-button variant="primary" size="lg" (btnClick)="openAddTripModal()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        <span>Add Trip</span>
-      </app-button>
-    </div>
+    <!-- At Top Left: Add Trip Button (Protected by canEdit permission) -->
+    @if (canEdit()) {
+      <div class="header-action-left">
+        <app-button variant="primary" size="lg" (btnClick)="openAddTripModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Add Trip</span>
+        </app-button>
+      </div>
+    }
   </div>
 
-  <!-- Common Reusable Data Table Component (API Integrated) -->
+  <!-- Common Reusable Data Table Component -->
   <app-data-table
-    [data]="trips()"
+    [data]="rows()"
     [columns]="columns"
     [actions]="tableActions"
-    [loading]="isLoading()"
-    [errorMessage]="error()"
     searchPlaceholder="Search trips by name, year, status, or notes..."
-    actionsHeader="Status Options"
+    actionsHeader="Actions"
     emptyMessage="No trips found matching your search query"
     rowIdKey="id"
-    (refresh)="onRefresh()"
-    (retry)="onRefresh()"
   ></app-data-table>
 
   <!-- Form Modal Component for Adding New Trip -->

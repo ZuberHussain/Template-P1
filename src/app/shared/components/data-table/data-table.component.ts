@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { AuthService } from '@core/services/auth.service';
 import { TableQueryParams } from '@core/models/api-response.model';
 import { ClickOutsideDirective } from '../../directives/click-outside.directive';
 import { PaginationComponent } from '../pagination/pagination.component';
@@ -25,7 +24,6 @@ export interface TableDropdownAction<T = any> {
   id: string;
   label: string;
   icon?: string;
-  permission?: string; // Required user permission to see this action
   danger?: boolean;
   visible?: (item: T) => boolean;
   disabled?: (item: T) => boolean;
@@ -45,8 +43,7 @@ export interface TableDropdownAction<T = any> {
   templateUrl: './data-table.component.html',
   styleUrl: './data-table.component.scss'
 })
-export class DataTableComponent<T extends Record<string, any>> {
-  private readonly authService = inject(AuthService);
+export class DataTableComponent<T extends object = any> {
   private readonly searchSubject = new Subject<string>();
 
   // ==========================================
@@ -144,7 +141,7 @@ export class DataTableComponent<T extends Record<string, any>> {
     if (term) {
       rows = rows.filter(item => {
         return this.columns().some(col => {
-          const val = col.render ? col.render(item) : item[col.key];
+          const val = col.render ? col.render(item) : (item as any)[col.key];
           if (val === null || val === undefined) return false;
           return String(val).toLowerCase().includes(term);
         });
@@ -156,8 +153,8 @@ export class DataTableComponent<T extends Record<string, any>> {
     const sortDir = this.sortDirection();
     if (sortKey) {
       rows.sort((a, b) => {
-        const valA = a[sortKey];
-        const valB = b[sortKey];
+        const valA = (a as any)[sortKey];
+        const valB = (b as any)[sortKey];
         if (valA === valB) return 0;
         if (valA === null || valA === undefined) return 1;
         if (valB === null || valB === undefined) return -1;
@@ -263,9 +260,17 @@ export class DataTableComponent<T extends Record<string, any>> {
     });
   }
 
+  getRowId(row: T): string | number {
+    return (row as any)[this.rowIdKey()] ?? JSON.stringify(row);
+  }
+
+  isDropdownActive(row: T): boolean {
+    return this.activeDropdownRowId() === this.getRowId(row);
+  }
+
   toggleDropdown(row: T, event: MouseEvent): void {
     event.stopPropagation();
-    const rowId = row[this.rowIdKey()] ?? JSON.stringify(row);
+    const rowId = this.getRowId(row);
     if (this.activeDropdownRowId() === rowId) {
       this.activeDropdownRowId.set(null);
     } else {
@@ -285,9 +290,6 @@ export class DataTableComponent<T extends Record<string, any>> {
 
   getPermittedActions(row: T): TableDropdownAction<T>[] {
     return this.actions().filter(action => {
-      if (action.permission && !this.authService.hasPermission(action.permission)) {
-        return false;
-      }
       if (action.visible && !action.visible(row)) {
         return false;
       }
@@ -303,6 +305,6 @@ export class DataTableComponent<T extends Record<string, any>> {
     if (col.render) {
       return col.render(row);
     }
-    return row[col.key] ?? '—';
+    return (row as any)[col.key] ?? '—';
   }
 }

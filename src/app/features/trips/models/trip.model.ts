@@ -1,13 +1,26 @@
 export type TripStatus = 'draft' | 'open' | 'closed' | string;
 
-export interface Trip {
+/**
+ * 📄 Trip Year DTO matching enterprise backend schema
+ */
+export interface TripYearDto {
   id: string;
   name: string;
   year: number;
   status: TripStatus;
-  note: string;
+  note?: string;
   createdAt: string;
 }
+
+/**
+ * 🏷️ Row type with flexible dynamic index signature:
+ * `TripYearDto & Record<string, unknown>`
+ */
+export type TripYearRow = TripYearDto & Record<string, unknown>;
+
+// Aliases for compatibility
+export type Trip = TripYearDto;
+export type TripRow = TripYearRow;
 
 export interface CreateTripDto {
   name: string;
@@ -36,13 +49,6 @@ export const TRIP_STATUS_BADGES: Record<TripStatus, string> = {
   closed: 'status-badge badge-closed'
 };
 
-/**
- * Enterprise Extensible Status Transition Rules:
- * - 'draft' can transition to 'open'
- * - 'open' can transition to 'closed'
- * - 'closed' can be re-opened back to 'open'
- * (Can easily add more statuses here based on future requirements)
- */
 export const TRIP_STATUS_TRANSITIONS: Record<TripStatus, StatusTransition[]> = {
   draft: [
     {
